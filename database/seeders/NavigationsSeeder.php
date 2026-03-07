@@ -16,42 +16,36 @@ class NavigationsSeeder extends Seeder {
                 'name' => 'Analytics',
                 'link' => '/dashboard/analytics',
                 'header' => 'Dashboard',
-				'type' => UserType::Staff
             ],
             [
                 'logo' => 'mat:group',
                 'name' => 'Members',
                 'link' => '/dashboard/members',
                 'header' => 'Membership',
-				'type' => UserType::Staff
             ],
             [
                 'logo' => 'mat:person',
                 'name' => 'Admins',
                 'link' => '/dashboard/admins/all',
                 'header' => 'Membership',
-				'type' => UserType::Staff
             ],
 			[
                 'logo' => 'mat:person_add',
                 'name' => 'Create User',
                 'link' => '/dashboard/create/member',
                 'header' => 'Administration',
-				'type' => UserType::Admin
             ],
             [
                 'logo' => 'mat:list',
                 'name' => 'Event Logs',
                 'link' => '/dashboard/logs',
                 'header' => 'Logs',
-				'type' => UserType::Staff
             ],
             [
                 'logo' => 'mat:settings',
                 'name' => 'Configuration',
                 'link' => '/dashboard/configuration',
                 'header' => 'Administration',
-				'type' => UserType::Staff
 			],
         ];
 

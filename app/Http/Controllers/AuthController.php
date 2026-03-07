@@ -2,113 +2,114 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\EventContract;
-use App\Contracts\EventType;
-use App\DTOs\SettingDTO;
-use App\DTOs\UserDTO;
 use App\Http\Requests\AdminLoginRequest;
+use App\Http\Requests\TwoFactorRequest;
+use App\Http\Requests\RecoveryCodeRequest;
+use App\Http\Requests\VerifyFirstTime2faRequest;
 use App\Services\AuthService;
-use App\Services\EventLogsService;
+use App\Services\TwoFactorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class AuthController extends BaseController 
+class AuthController extends BaseController
 {
-
-	public function __construct(
-		private AuthService $authService,
-		private EventLogsService $eventLogsService
-	) 
-	{
-	}
-
-	public function adminLogin(AdminLoginRequest $request): JsonResponse 
-	{
-        Log::info("Admin login attempt", ['ip' => $request->ip()]);
-
-		$user = $this->authService->userAllowedForLoginAccess($request->username);
-		$this->authService->handleEarlyReturns($user, $request->username);
-		$this->authService->resetLoginAttemptsIfExpired($user);
-		$this->authService->handleInvalidLoginAttempt($user, $request);
-		$encryptedToken = $this->authService->generateEncryptedAccessToken($user, $request->password);
-		$this->authService->resetLoginAttemptsIfSuccessful($user);
-
-        Log::info("Admin login successful", ['username' => $user->username, 'ip' => $request->ip()]);
-
-		$this->eventLogsService->logEvent(
-			new EventContract(
-				action_type: EventType::LOGIN,
-				action_by: $user->username,
-				action: 'Login successful',
-				created_by: $user->id,
-				user_id: $user->id
-			)
-		);
-
-		return $this->success([
-			'token' => $encryptedToken,
-			'user' => UserDTO::fromModel($user)
-		], 'Login successful');
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly TwoFactorService $twoFactorService,
+    ) {
     }
 
-	public function guestLogin(): JsonResponse 
-	{
-		Log::info("Guest login attempt");
+    public function userLogin(AdminLoginRequest $request): JsonResponse
+    {
+        Log::info('User login attempt', ['ip' => $request->ip()]);
 
-		$user = $this->authService->handleGuestLogin();
-		$guestHardcodedPassword = config('app.GUEST_SECRET');
-		$encryptedToken = $this->authService->generateEncryptedAccessToken($user, $guestHardcodedPassword);
+        $user = $this->authService->findUser($request->username);
+        $this->authService->login($request->username, $request->password);
 
-		Log::info("Guest login successful");
+        Log::info('User login successful', ['username' => $user->username, 'ip' => $request->ip()]);
 
-		return $this->success([
-			'token' => $encryptedToken,
-			'user' => UserDTO::fromModel($user)
-		], 'Login successful');
-	}
+        return $this->success(
+            [
+                'token' => $this->authService->generatePreAuthToken($user),
+                'is_2fa_enabled' => (bool) $user->two_factor_enabled,
+				'qr_code_url' => $this->twoFactorService->generateQR($user),
+            ],
+            'Login successful.'
+        );
+    }
 
-	public function reInitializeApp(Request $request): JsonResponse 
-	{
-		Log::info("Token validation attempt", ['ip' => $request->ip()]);
-		$user = $this->authService->handleValidateToken($request);
-		$settings = $this->authService->getSettings();
-		$name = $user->first_name . ' ' . $user->last_name;
-		Log::info("Token validation successful");
-		return $this->success([
-			'user' => UserDTO::fromModel($user),
-			'settings' => SettingDTO::fromModel($settings, $name)
-		]);
-	}
+    public function enable2fa(TwoFactorRequest $request): JsonResponse
+    {
+        Log::info('2FA enable attempt', ['ip' => $request->ip()]);
 
-	public function onLogout(): JsonResponse 
-	{
-		Log::info("Admin logout");
+        $user = JWTAuth::user();
+        $this->twoFactorService->enable($user, $request->otp);
 
-		$user = JWTAuth::user();
-		$this->authService->handleLogout();
+        Log::info('2FA enabled', ['username' => $user->username]);
 
-		$this->eventLogsService->logEvent(
-			new EventContract(
-				action_type: EventType::LOGOUT,
-				action_by: $user->username,
-				action: 'Logout successful',
-				created_by: $user->id,
-				user_id: $user->id
-			)
-		);
-		return $this->success(null, 'Logout successful');
-	}
+        $codes = $this->twoFactorService->createRecoveryCodes($user);
 
-	public function checkType(): JsonResponse 
-	{
-		Log::info("Type check");
-		$user = JWTAuth::user();
-		if(! $user) {
-			return $this->fail('Invalid token', 401, null, true);
-		}
-		return $this->success(['type' => $user['type']]);
-	}
+        return $this->success(
+            ['recovery_codes' => $codes],
+            '2FA enabled successfully. Store your recovery codes safely.'
+        );
+    }
 
+    public function disable2fa(TwoFactorRequest $request): JsonResponse
+    {
+        Log::info('2FA disable attempt', ['ip' => $request->ip()]);
+
+        $user = JWTAuth::user();
+        $this->twoFactorService->disable($user, $request->otp);
+
+        Log::info('2FA disabled', ['username' => $user->username]);
+
+        return $this->success(null, '2FA disabled successfully.');
+    }
+
+    public function verify2fa(TwoFactorRequest $request): JsonResponse
+    {
+        Log::info('2FA verify attempt', ['ip' => $request->ip()]);
+
+        $user  = $this->authService->resolvePreAuthUser($request->bearerToken());
+        $this->twoFactorService->verify($user, $request->otp);
+        $token = $this->authService->generateToken($user);
+
+        Log::info('2FA verified', ['username' => $user->username]);
+
+        return $this->success(['token' => $token, 'user' => $user], '2FA verified successfully.');
+    }
+
+    public function useRecoveryCode(RecoveryCodeRequest $request): JsonResponse
+    {
+        Log::info('Recovery code use attempt', ['ip' => $request->ip()]);
+
+        $user  = $this->authService->resolvePreAuthUser($request->bearerToken());
+        $this->twoFactorService->useRecoveryCode($user, $request->recovery_code);
+        $token = $this->authService->generateToken($user);
+
+        Log::info('Recovery code used, 2FA disabled', ['username' => $user->username]);
+
+        return $this->success(null, 'Recovery code accepted. 2FA has been disabled.');
+    }
+
+    public function verifyFirstTime2fa(VerifyFirstTime2faRequest $request): JsonResponse
+    {
+        Log::info('First-time 2FA verify attempt', ['ip' => $request->ip()]);
+
+        $user = $this->authService->resolvePreAuthUser($request->bearerToken());
+        $user->two_factor_secret = $request->secret;
+        $this->twoFactorService->verify($user, $request->otp);
+        $this->twoFactorService->updateSecret($user, $request->secret);
+        $codes = $this->twoFactorService->createRecoveryCodes($user);
+        $token = $this->authService->generateToken($user);
+
+        Log::info('First-time 2FA verified', ['username' => $user->username]);
+
+        return $this->success(
+            ['token' => $token, 'user' => $user, 'recovery_codes' => $codes],
+            '2FA verified successfully.'
+        );
+    }
 }

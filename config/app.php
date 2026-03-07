@@ -126,5 +126,4 @@ return [
 	'AES_KEY' => env('AES_KEY', null),
 	'AES_IV' => env('AES_IV', null),
 
-	'GUEST_SECRET' => env('GUEST_SECRET', null),
 ];

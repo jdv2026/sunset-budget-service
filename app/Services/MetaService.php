@@ -6,17 +6,21 @@ use App\Contracts\UserType;
 use App\Models\DbVersion;
 use App\Models\Navigation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class MetaService 
 {
 
-	public function handleMetaData(): array 
+	public function handleMetaData(): array
 	{
 		$latestVersion = $this->getDbVersions();
-		$publicKey = $this->getPublicKey();
+
+		if ($latestVersion) {
+			$latestVersion->version = 'DB: ' . $latestVersion->version;
+		}
+
 		return [
-			'publicKey' => $publicKey,
 			'dbVersions' => $latestVersion,
 		];
 	}
@@ -76,12 +80,6 @@ class MetaService
 		return DbVersion::select('version', 'created_at', 'updated_at')
 			->latest()
 			->first();
-	}
-
-	private function getPublicKey(): ?string 
-	{
-		$publicKeyPath = storage_path('jwt/public.pem');
-		return file_exists($publicKeyPath) ? file_get_contents($publicKeyPath) : null;
 	}
 
 }

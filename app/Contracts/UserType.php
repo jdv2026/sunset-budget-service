@@ -4,8 +4,7 @@ namespace App\Contracts;
 
 enum UserType: string {
     case Admin = 'Admin';
-    case Staff = 'Staff';
-    case Member = 'Member';
+    case User  = 'User';
     case Guest = 'Guest';
 
     public static function values(): array

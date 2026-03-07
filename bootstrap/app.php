@@ -82,7 +82,4 @@ return Application::configure(basePath: dirname(__DIR__))
             );
 		});
     })
-	->withSchedule(function (Schedule $schedule) {
-		$schedule->command('payments:check-expiry')->hourly();
-		$schedule->command('payments:delete-old-notifications')->weekly();
-	})->create();
+	->create();

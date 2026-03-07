@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\JwtAuthenticate;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\EventLogController;
+use App\Http\Controllers\JwksController;
 use App\Http\Controllers\MetaController;
-use App\Http\Controllers\SettingController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     $title = '403 - Forbidden';
@@ -23,17 +23,18 @@ Route::get('/', function () {
     );
 });
 
-Route::post('web/meta', [MetaController::class, 'meta']);
-Route::post('web/admin/login', [AuthController::class, 'adminLogin']);
+Route::get('jwks', [JwksController::class, 'jwks']);
+
+Route::post('web/meta/data', [MetaController::class, 'meta']);
+Route::post('web/user/login', [AuthController::class, 'userLogin']);
 Route::post('web/guest/login', [AuthController::class, 'guestLogin']);
+Route::post('web/firsttime/2fa/verify', [AuthController::class, 'verifyFirstTime2fa']);
+Route::post('web/2fa/recovery', [AuthController::class, 'useRecoveryCode']);
+Route::post('web/2fa/verify', [AuthController::class, 'verify2fa']);
 
 Route::middleware([JwtAuthenticate::class])->group(function () {
-    Route::post('web/admin/logout', [AuthController::class, 'onLogout']);
-    Route::post('web/user', [AuthController::class, 'reInitializeApp']);
-    Route::post('web/check/type', [AuthController::class, 'checkType']);
 
-    Route::post('web/get/eventlogs', [EventLogController::class, 'getEventLogs']);
-
-    Route::post('web/set/settings', [SettingController::class, 'updateSetting']);
+    Route::post('web/2fa/enable',  [AuthController::class, 'enable2fa']);
+    Route::post('web/2fa/disable', [AuthController::class, 'disable2fa']);
 
 });
