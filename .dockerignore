@@ -6,7 +6,6 @@ storage/logs/*.log
 storage/framework/cache
 storage/framework/sessions
 storage/framework/views
-storage/jwt
 database/database.sqlite
 .env
 .env.*

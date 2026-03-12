@@ -83,7 +83,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: mkdir -p ${{ secrets.SERVER_PROJECT_PATH }}
 
-      - name: Copy docker-compose to server
+      - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -91,6 +91,35 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: docker-compose.yml
           target: ${{ secrets.SERVER_PROJECT_PATH }}
+
+      - name: Create .env on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cat > ${{ secrets.SERVER_PROJECT_PATH }}/.env <<'EOF'
+            APP_NAME=PersonalHub
+            APP_ENV=production
+            APP_KEY=${{ secrets.APP_KEY }}
+            APP_DEBUG=false
+            APP_URL=${{ secrets.APP_URL }}
+            APP_LOCALE=en
+            BCRYPT_ROUNDS=12
+            LOG_CHANNEL=stack
+            LOG_LEVEL=info
+            DB_CONNECTION=sqlite
+            SESSION_DRIVER=database
+            SESSION_LIFETIME=120
+            QUEUE_CONNECTION=database
+            CACHE_STORE=database
+            APP_PORT=${{ secrets.APP_PORT }}
+            AES_KEY=${{ secrets.AES_KEY }}
+            AES_IV=${{ secrets.AES_IV }}
+            JWT_PRIVATE_KEY="${{ secrets.JWT_PRIVATE_KEY }}"
+            JWT_PUBLIC_KEY="${{ secrets.JWT_PUBLIC_KEY }}"
+            EOF
 
       - name: SSH and deploy
         uses: appleboy/ssh-action@v1
