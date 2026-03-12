@@ -33,7 +33,13 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 COPY . .
 
 RUN composer run-script post-autoload-dump && \
-    mkdir -p database && \
+    mkdir -p database \
+            storage/framework/views \
+            storage/framework/cache \
+            storage/framework/sessions \
+            storage/framework/testing \
+            storage/logs \
+            bootstrap/cache && \
     chown -R www-data:www-data storage bootstrap/cache database && \
     chmod -R 775 storage bootstrap/cache database
 

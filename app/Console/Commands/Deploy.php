@@ -17,11 +17,14 @@ class Deploy extends Command
         $this->info('Starting deployment...');
         $this->newLine();
 
+        $this->ensureStorageDirectories();
+
         $steps = [
             'Installing Sunset'        => ['php', 'artisan', 'install:sunset'],
             'Running migrations'       => ['php', 'artisan', 'migrate', '--force'],
             'Caching configuration'   => ['php', 'artisan', 'config:cache'],
             'Caching routes'          => ['php', 'artisan', 'route:cache'],
+            'Optimizing'              => ['php', 'artisan', 'optimize'],
         ];
 
         foreach ($steps as $label => $command) {
@@ -36,6 +39,22 @@ class Deploy extends Command
         $this->info('Deployment completed successfully.');
 
         return self::SUCCESS;
+    }
+
+    private function ensureStorageDirectories(): void
+    {
+        $dirs = [
+            storage_path('framework/views'),
+            storage_path('framework/cache'),
+            storage_path('framework/sessions'),
+            storage_path('logs'),
+        ];
+
+        foreach ($dirs as $dir) {
+            if (! is_dir($dir)) {
+                mkdir($dir, 0775, true);
+            }
+        }
     }
 
     private function updateDbVersion(): void
