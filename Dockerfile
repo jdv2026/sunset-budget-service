@@ -40,6 +40,7 @@ RUN composer run-script post-autoload-dump && \
             storage/framework/testing \
             storage/logs \
             bootstrap/cache && \
+    touch database/database.sqlite && \
     chown -R www-data:www-data storage bootstrap/cache database && \
     chmod -R 775 storage bootstrap/cache database
 
