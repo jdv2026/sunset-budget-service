@@ -22,7 +22,6 @@ class Deploy extends Command
             'Running migrations'       => ['php', 'artisan', 'migrate', '--force'],
             'Caching configuration'   => ['php', 'artisan', 'config:cache'],
             'Caching routes'          => ['php', 'artisan', 'route:cache'],
-            'Caching views'           => ['php', 'artisan', 'view:cache'],
             'Optimizing'              => ['php', 'artisan', 'optimize'],
         ];
 
