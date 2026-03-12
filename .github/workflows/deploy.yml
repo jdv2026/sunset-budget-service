@@ -71,7 +71,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -89,7 +89,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: docker-compose.yml
+          source: "docker-compose.yml,docker/nginx/default.conf"
           target: ${{ secrets.SERVER_PROJECT_PATH }}
 
       - name: Create .env on server
@@ -99,27 +99,29 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cat > ${{ secrets.SERVER_PROJECT_PATH }}/.env <<'EOF'
-            APP_NAME=PersonalHub
-            APP_ENV=production
-            APP_KEY=${{ secrets.APP_KEY }}
-            APP_DEBUG=false
-            APP_URL=${{ secrets.APP_URL }}
-            APP_LOCALE=en
-            BCRYPT_ROUNDS=12
-            LOG_CHANNEL=stack
-            LOG_LEVEL=info
-            DB_CONNECTION=sqlite
-            SESSION_DRIVER=database
-            SESSION_LIFETIME=120
-            QUEUE_CONNECTION=database
-            CACHE_STORE=database
-            APP_PORT=${{ secrets.APP_PORT }}
-            AES_KEY=${{ secrets.AES_KEY }}
-            AES_IV=${{ secrets.AES_IV }}
-            JWT_PRIVATE_KEY="${{ secrets.JWT_PRIVATE_KEY }}"
-            JWT_PUBLIC_KEY="${{ secrets.JWT_PUBLIC_KEY }}"
-            EOF
+            ENV_FILE=${{ secrets.SERVER_PROJECT_PATH }}/.env
+            printf '%s\n' \
+              'APP_NAME=PersonalHub' \
+              'APP_ENV=production' \
+              'APP_KEY=${{ secrets.APP_KEY }}' \
+              'APP_DEBUG=false' \
+              'APP_URL=${{ secrets.APP_URL }}' \
+              'APP_LOCALE=en' \
+              'BCRYPT_ROUNDS=12' \
+              'LOG_CHANNEL=stack' \
+              'LOG_LEVEL=info' \
+              'DB_CONNECTION=sqlite' \
+              'SESSION_DRIVER=database' \
+              'SESSION_LIFETIME=120' \
+              'QUEUE_CONNECTION=database' \
+              'CACHE_STORE=database' \
+              'APP_PORT=${{ secrets.APP_PORT }}' \
+              'AES_KEY=${{ secrets.AES_KEY }}' \
+              'AES_IV=${{ secrets.AES_IV }}' \
+              'JWT_PRIVATE_KEY="${{ secrets.JWT_PRIVATE_KEY }}"' \
+              'JWT_PUBLIC_KEY="${{ secrets.JWT_PUBLIC_KEY }}"' \
+              'DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/sunset-auth-service-api:latest' \
+              > "$ENV_FILE"
 
       - name: SSH and deploy
         uses: appleboy/ssh-action@v1
@@ -130,12 +132,12 @@ jobs:
           script: |
             cd ${{ secrets.SERVER_PROJECT_PATH }}
             echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-            docker tag ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service:latest ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service:previous || true
+            docker tag ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service-api:latest ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service-api:previous || true
             docker compose pull
             docker compose up -d
             if ! docker compose exec -T app php artisan deploy; then
               echo "Deploy failed, rolling back..."
-              docker tag ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service:previous ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service:latest
+              docker tag ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service-api:previous ${{ secrets.DOCKER_USERNAME }}/sunset-auth-service-api:latest
               docker compose up -d
               exit 1
             fi
