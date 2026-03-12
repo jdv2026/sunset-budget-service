@@ -36,8 +36,8 @@ jobs:
           echo "APP_PORT=${{ secrets.APP_PORT }}" >> .env
           echo "AES_KEY=${{ secrets.AES_KEY }}" >> .env
           echo "AES_IV=${{ secrets.AES_IV }}" >> .env
-          echo "JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}" >> .env
-          echo "JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}" >> .env
+          echo "JWT_PRIVATE_KEY=\"${{ secrets.JWT_PRIVATE_KEY }}\"" >> .env
+          echo "JWT_PUBLIC_KEY=\"${{ secrets.JWT_PUBLIC_KEY }}\"" >> .env
 
       - name: Run tests
         run: php artisan test
