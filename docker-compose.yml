@@ -22,19 +22,6 @@ services:
     networks:
       - sunset
 
-  worker:
-    image: ${DOCKER_IMAGE}
-    restart: unless-stopped
-    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
-    volumes:
-      - app_storage:/var/www/html/storage
-      - app_database:/var/www/html/database
-    env_file:
-      - .env
-    depends_on:
-      - app
-    networks:
-      - sunset
 
 networks:
   sunset:
