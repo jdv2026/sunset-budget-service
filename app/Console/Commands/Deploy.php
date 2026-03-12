@@ -22,7 +22,6 @@ class Deploy extends Command
             'Running migrations'       => ['php', 'artisan', 'migrate', '--force'],
             'Caching configuration'   => ['php', 'artisan', 'config:cache'],
             'Caching routes'          => ['php', 'artisan', 'route:cache'],
-            'Optimizing'              => ['php', 'artisan', 'optimize'],
         ];
 
         foreach ($steps as $label => $command) {
