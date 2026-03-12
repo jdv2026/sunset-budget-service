@@ -10,14 +10,11 @@ return new class extends Migration
     {
         Schema::create('navigations', function (Blueprint $table) {
             $table->id();
-
             $table->string('logo');
             $table->string('name');
             $table->string('link');
             $table->string('header');
-			$table->string('type');
-
-			$table->timestamps(); 
+            $table->timestamps();
         });
     }
 

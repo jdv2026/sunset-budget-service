@@ -2,194 +2,175 @@
 
 namespace App\Services;
 
-use App\Contracts\UserType;
-use App\Models\Setting;
+use App\DTOs\ExceptionParametersDTO;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
-use Tymon\JWTAuth\Exceptions\TokenExpiredException;
-use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
-class AuthService 
+class AuthService
 {
+    private const MAX_ATTEMPTS   = 3;
+    private const LOCKOUT_MINUTES = 5;
 
-	private const MAX_LOGIN_ATTEMPTS = 3;
+    public function __construct(
+        private readonly ThrowJsonExceptionService $throwJsonExceptionService
+    ) {
+    }
 
-	public function __construct(private readonly ThrowJsonExceptionService $throwJsonExceptionService) 
-	{
-	}
+    public function login(string $username, string $password): void
+    {
+        $user = $this->findUser($username);
 
-	public function userAllowedForLoginAccess(string $username): User | null 
-	{
-		return User::where('username', $username)
-			->where(function ($query) {
-				$query->where('type', UserType::Admin->value)
-					->orWhere('type', UserType::Staff->value);
-			})
-			->first();
-	}
-	
-	public function resetLoginAttemptsIfExpired(User $user): void 
-	{
-		if ($user->attempts_expiry && now()->gte($user->attempts_expiry)) {
-			$user->attempts = 0;
-			$user->attempts_expiry = null;
-			$user->save();
-		}
-	}
+        $this->ensureNotLockedOut($user);
+        $this->validatePassword($user, $password);
+        $this->resetAttempts($user);
+    }
 
-	public function resetLoginAttemptsIfSuccessful(User $user): void 
-	{
-		$user->attempts = 0;
-		$user->attempts_expiry = null;
-		$user->save();
-	}
+    public function generateToken(User $user): string
+    {
+        return $this->generateEncryptedToken($user);
+    }
 
-	public function generateEncryptedAccessToken(User $user, string $password): string 
-	{
-		$jti = Str::uuid()->toString();
-		$token = JWTAuth::claims(['jti' => $jti, 'role' => $user->type])->attempt([
-			'username' => $user->username,
-			'password' => $password,
-		]);
-		$key = base64_decode(config('app.AES_KEY'));
-		$iv = hex2bin(config('app.AES_IV'));
-		return openssl_encrypt(
-			$token,
-			'aes-256-cbc', 
-			$key,
-			0, 
-			$iv
-		);
-	}
+    public function generatePreAuthToken(User $user): string
+    {
+        $token = JWTAuth::claims([
+            'jti'      => Str::uuid()->toString(),
+            'type'     => $user->type,
+            'pre_auth' => true,
+            'exp'      => now()->addMinutes(5)->timestamp,
+        ])->fromUser($user);
 
-	public function validateAdminOrStaff(User $user): bool 
-	{
-		return in_array($user->type, [UserType::Admin->value, UserType::Staff->value]);
-	}
+        return openssl_encrypt(
+            $token,
+            'aes-256-cbc',
+            base64_decode(config('app.AES_KEY')),
+            0,
+            hex2bin(config('app.AES_IV')),
+        );
+    }
 
-	public function handleEarlyReturns(?User $user, string $userName): void
-	{
-		$this->ensureUserExists($user, $userName);
-		$this->ensureAuthorized($user, $userName);
-		$this->ensureNotLockedOut($user, $userName);
-	}
+    public function resolvePreAuthUser(string $encryptedToken): User
+    {
+        $decrypted = openssl_decrypt(
+            $encryptedToken,
+            'aes-256-cbc',
+            base64_decode(config('app.AES_KEY')),
+            0,
+            hex2bin(config('app.AES_IV'))
+        );
 
-	public function handleInvalidLoginAttempt(User $user, Request $request): void 
-	{
-        if(! Hash::check($request->password, $user->password)) {
-			$user->attempts++;
-			$user->attempts_expiry = now()->addMinutes(5);
-			$user->save();
-			if($this->checkIfLocked($user)) {
-				$this->throwTimeLoginExpired($user);
-			}
-			$this->throwIf(true, 'Invalid credentials. Attempts: ' . $user->attempts . '/3', Response::HTTP_UNAUTHORIZED);
-		}
-	}
+        if (! $decrypted) {
+            $this->throwNotFoundException('Invalid token.', Response::HTTP_UNAUTHORIZED, false, false, false);
+        }
 
-	public function handleGuestLogin(): User 
-	{
-		$user = User::where('type', UserType::Guest->value)->first();
-		$this->throwIf($user, 'User not found', Response::HTTP_NOT_FOUND);
-		return $user;
-	}
+        try {
+            $payload = JWTAuth::setToken($decrypted)->getPayload();
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            $this->throwNotFoundException('Invalid token.', Response::HTTP_UNAUTHORIZED, false, false, false);
+        }
 
-	public function handleValidateToken(Request $request): User 
-	{
-		try {
-			$user = JWTAuth::setToken($request->bearerToken())->authenticate();
-			$this->throwIf($user, 'Token validation failed', Response::HTTP_UNAUTHORIZED, null, true);
-		} 
-		catch (TokenExpiredException $e) {
-			$this->throwIf(true, 'Token validation failed', Response::HTTP_UNAUTHORIZED, null, true);
-		} 
-		catch (TokenInvalidException $e) {
-			$this->throwIf(true, 'Token validation failed', Response::HTTP_UNAUTHORIZED, null, true);
-		} 
-		catch (\Exception $e) {
-			$this->throwIf(true, 'Token validation failed', Response::HTTP_UNAUTHORIZED, null, true);
-		}
-		return $user;
-	}
+        if (! $payload->get('pre_auth')) {
+            $this->throwNotFoundException('Invalid token.', Response::HTTP_UNAUTHORIZED, false, false, false);
+        }
 
-	public function getSettings(): Setting 
-	{
-		return Setting::first();
-	}
+        return JWTAuth::setToken($decrypted)->authenticate();
+    }
 
-	public function handleLogout(): void 
-	{
-		$token = JWTAuth::getToken();
-		JWTAuth::invalidate($token);
-	}
+    public function handleLogout(): void
+    {
+        JWTAuth::invalidate(JWTAuth::getToken());
+    }
 
-	public function getCurrentUser(): User 
-	{
-		$user = JWTAuth::user();
-		$this->throwIf($user, 'Forbidden: Admins only', Response::HTTP_FORBIDDEN);
-		return $user;
-	}
+    public function findUser(string $username): User
+    {
+        $user = User::where('username', $username)->first();
 
-	public function adminAccess(): User 
-	{
-		$user = JWTAuth::user();
-		$this->throwIf($user['type'] === UserType::Admin->value, 'Forbidden: Admins only', Response::HTTP_FORBIDDEN);
-		return $user;
-	}
+        if (! $user) {
+            Log::warning('Login failed: user not found', ['username' => $username]);
+            $this->throwNotFoundException('Invalid credentials.', Response::HTTP_NOT_FOUND, false, false, false);
+        }
 
-	private function checkIfLocked($user): bool 
-	{
-		return $user->attempts >= 3;
-	}
+        return $user;
+    }
 
-	private function throwTimeLoginExpired(User $user): void 
-	{
-		$time = round(now()->diffInMinutes($user->attempts_expiry, false));
-		$this->throwIf(true, 'Too many attempts. Please try again ' . ($time === 0 ? '1 minute' : $time . ' minutes') . ' later', Response::HTTP_TOO_MANY_REQUESTS);
-	}
+    private function ensureNotLockedOut(User $user): void
+    {
+        if ($user->attempts < self::MAX_ATTEMPTS || ! $user->attempts_expiry) {
+            return;
+        }
 
-	private function throwIf($condition, string $message, int $code, mixed $payload = null, bool $global_error = false): void 
-	{
-		if (! $condition) {
-			Log::warning($message);
-			$this->throwJsonExceptionService->throwJsonException($message, $code, $payload, $global_error);
-		}
-	}
+        if (now()->gte($user->attempts_expiry)) {
+            $this->resetAttempts($user);
+            return;
+        }
 
-	private function ensureUserExists(?User $user): void 
-	{
-		if ($user) {
-			return;
-		}
-		$this->throwIf(true, 'User not found', Response::HTTP_NOT_FOUND);
-	}
+        $minutesLeft = (int) ceil(now()->diffInMinutes($user->attempts_expiry, false));
 
-	private function ensureAuthorized(User $user): void 
-	{
-		if ($this->validateAdminOrStaff($user)) {
-			return;
-		}
-		$this->throwIf(true, 'Forbidden: Authorized access only', Response::HTTP_FORBIDDEN);
-	}
+        Log::warning('Login failed: account locked', ['username' => $user->username]);
 
-	private function ensureNotLockedOut(User $user): void
-	{
-		if (! $this->isLockedOut($user)) {
-			return;
-		}
-		$this->throwTimeLoginExpired($user);
-	}
+		$this->throwNotFoundException("Too many attempts. Try again in {$minutesLeft} minute(s).", Response::HTTP_TOO_MANY_REQUESTS, true, false, true);
+    }
 
-	private function isLockedOut(User $user): bool 
-	{
-		return $user->attempts >= self::MAX_LOGIN_ATTEMPTS
-			&& $user->attempts_expiry
-			&& now()->lt($user->attempts_expiry);
-	}
+    private function validatePassword(User $user, string $password): void
+    {
+        if (Hash::check($password, $user->password)) {
+            return;
+        }
+
+        $user->increment('attempts');
+        $user->attempts_expiry = now()->addMinutes(self::LOCKOUT_MINUTES);
+        $user->save();
+
+        Log::warning('Login failed: invalid password', ['username' => $user->username, 'attempts' => $user->attempts]);
+
+        $remaining = self::MAX_ATTEMPTS - $user->attempts;
+        $message   = $remaining > 0
+            ? "Invalid credentials. {$remaining} attempt(s) remaining."
+            : "Too many attempts. Try again in " . self::LOCKOUT_MINUTES . " minutes.";
+
+        $this->throwNotFoundException($message, Response::HTTP_UNAUTHORIZED, false, false, false);
+    }
+
+    private function resetAttempts(User $user): void
+    {
+        $user->attempts        = 0;
+        $user->attempts_expiry = null;
+        $user->save();
+    }
+
+    private function generateEncryptedToken(User $user): string
+    {
+        $token = JWTAuth::claims(['jti' => Str::uuid()->toString(), 'type' => $user->type])
+            ->fromUser($user);
+
+        return openssl_encrypt(
+            $token,
+            'aes-256-cbc',
+            base64_decode(config('app.AES_KEY')),
+            0,
+            hex2bin(config('app.AES_IV'))
+        );
+    }
+
+    private function throwNotFoundException(
+        string $message = 'Invalid credentials.',
+        int $status = Response::HTTP_UNAUTHORIZED,
+        bool $global_error = true,
+		bool $isShowModal = false,
+		bool $isCustomMessage = false,
+    ): never {
+        $this->throwJsonExceptionService->throwJsonException(
+            new ExceptionParametersDTO(
+                message: $message,
+                status: $status,
+                global_error: $global_error,
+				is_show_modal: $isShowModal,
+				is_custom_message: $isCustomMessage,
+            )
+        );
+    }
 
 }

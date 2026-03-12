@@ -22,6 +22,10 @@ class JwtAuthenticate
             $token = $this->decryptToken($request);
             $this->authenticateToken($request, $token);
 
+            if (JWTAuth::getPayload()->get('pre_auth')) {
+                return $this->jsonError('Token invalid');
+            }
+
             return $next($request);
 
         } 

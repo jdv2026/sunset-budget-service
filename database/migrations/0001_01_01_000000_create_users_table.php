@@ -13,23 +13,18 @@ return new class extends Migration
     {
 		Schema::create('users', function (Blueprint $table) {
 			$table->id();
-			$table->string('first_name');
-			$table->string('last_name');
-			$table->float('height'); 
-			$table->text('address');
-			$table->string('phone');
-			$table->string('profile_picture')->nullable();
-			$table->string('username')->nullable()->unique();
+			$table->string('first_name')->nullable();
+			$table->string('last_name')->nullable();
+			$table->string('username')->unique();
 			$table->string('password')->nullable();
+			$table->enum('type', ['Admin', 'User', 'Guest'])->default('User');
 			$table->string('jti')->nullable();
-			$table->enum('status', ['Active', 'Inactive', 'Prohibit'])->default('Active'); 
-			$table->enum('type', ['Admin', 'Staff', 'Member', 'Guest'])->default('Member'); 
 			$table->integer('attempts')->default(0);
-			$table->dateTime('attempts_expiry')->nullable();
-			$table->date('dob');
-			$table->integer('created_by');
-			$table->integer('updated_by');
-			$table->timestamps(); 
+			$table->timestamp('attempts_expiry')->nullable();
+			$table->string('two_factor_secret')->nullable();
+			$table->boolean('two_factor_enabled')->default(false);
+			$table->text('two_factor_recovery_codes')->nullable();
+			$table->timestamps();
 		});
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

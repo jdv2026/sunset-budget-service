@@ -2,71 +2,55 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Contracts\UserType;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject 
+class User extends Authenticatable implements JWTSubject
 {
+    protected $fillable = [
+        'first_name',
+        'last_name',
+        'username',
+        'password',
+        'type',
+        'jti',
+        'attempts',
+        'attempts_expiry',
+        'two_factor_secret',
+        'two_factor_enabled',
+        'two_factor_attempts',
+        'two_factor_attempts_expiry',
+    ];
 
-    use HasFactory, Notifiable;
+    protected $hidden = [
+        'password',
+        'jti',
+        'two_factor_secret',
+    ];
 
-    public function getJWTIdentifier()
+    protected $casts = [
+        'attempts_expiry'            => 'datetime',
+        'attempts'                   => 'integer',
+        'type'                       => UserType::class,
+        'two_factor_enabled'         => 'boolean',
+        'two_factor_attempts'        => 'integer',
+        'two_factor_attempts_expiry' => 'datetime',
+    ];
+
+    public function recoveryCodes(): HasMany
+    {
+        return $this->hasMany(RecoveryCode::class);
+    }
+
+    public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
     }
 
     public function getJWTCustomClaims(): array
     {
-        return [
-            'role' => $this->role,
-        ];
+        return [];
     }
-	
-    public function eventLogs()
-    {
-        return $this->hasMany(EventLog::class);
-    }
-
-    public function settings()
-    {
-        return $this->hasMany(Setting::class, 'updated_by');
-    }
-
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class, 'created_by');
-    }
-
-    protected $fillable = [
-        'first_name',
-        'last_name',
-        'age',
-		'height',
-		'address',
-		'profile_picture',
-		'phone',
-		'username',
-		'password',
-		'status',
-		'type',
-		'created_by',
-		'updated_by',
-		'dob',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'attempts_expiry' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
-
 }
