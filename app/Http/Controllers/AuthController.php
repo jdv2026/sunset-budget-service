@@ -112,4 +112,12 @@ class AuthController extends BaseController
             '2FA verified successfully.'
         );
     }
+
+	public function fetchAuthUser(): JsonResponse
+	{
+		Log::info('Fetching authenticated user', ['ip' => request()->ip()]);
+		$user = JWTAuth::user();
+		return $this->success(['user' => $user, 'settings' => null], 'User fetched successfully.');
+	}
+
 }

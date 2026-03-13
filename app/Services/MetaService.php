@@ -25,20 +25,9 @@ class MetaService
 		];
 	}
 
-	public function handleGetNavigationData(): array 
+	public function handleGetNavigationData(): Collection 
 	{
-		$navs = $this->getNavigation();
-		return $this->filterOutAccessibleNavs($navs);
-	}
-
-	private function filterOutAccessibleNavs(Collection $navs): array 
-	{
-		$user = JWTAuth::user();
-
-		return $navs->map(fn ($value) => [
-			'header' => $value['header'],
-			'items' => $this->filterItemsForUser($value['items'], $user),
-		])->toArray();
+		return $this->getNavigation();
 	}
 
 	private function filterItemsForUser($items, $user): array 
