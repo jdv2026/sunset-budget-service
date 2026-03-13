@@ -41,5 +41,9 @@ return new class extends Migration
             '/dashboard/budget/goals',
             '/dashboard/budget/bills',
         ])->delete();
+
+        Schema::table('navigations', function (Blueprint $table) {
+            $table->dropUnique(['link']);
+        });
     }
 };
