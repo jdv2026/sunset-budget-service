@@ -4,7 +4,6 @@ services:
     restart: unless-stopped
     volumes:
       - app_storage:/var/www/html/storage
-      - app_database:/var/www/html/database
     env_file:
       - .env
     networks:
@@ -29,4 +28,3 @@ networks:
 
 volumes:
   app_storage:
-  app_database:
