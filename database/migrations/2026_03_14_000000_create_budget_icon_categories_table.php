@@ -8,18 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('navigations', function (Blueprint $table) {
+        Schema::create('budget_icon_categories', function (Blueprint $table) {
             $table->id();
-            $table->string('logo');
-            $table->string('name');
-            $table->string('link');
-            $table->string('header');
+            $table->string('icon_name')->unique();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('navigations');
+        Schema::dropIfExists('budget_icon_categories');
     }
 };
