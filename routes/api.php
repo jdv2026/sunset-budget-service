@@ -6,6 +6,7 @@ use App\Http\Controllers\BudgetActiveCategoryController;
 use App\Http\Controllers\BudgetColorCategoryController;
 use App\Http\Controllers\BudgetActiveGoalController;
 use App\Http\Controllers\BudgetIconCategoryController;
+use App\Http\Controllers\BudgetActiveBillController;
 
 Route::get('/', function () {
     $title = '403 - Forbidden';
@@ -36,5 +37,10 @@ Route::middleware([JwtAuthenticate::class])->group(function () {
     Route::put('/web/budget-active-goals/{id}', [BudgetActiveGoalController::class, 'update']);
     Route::delete('/web/budget-active-goals/{id}', [BudgetActiveGoalController::class, 'destroy']);
     Route::post('/web/store/budget-active-goals', [BudgetActiveGoalController::class, 'store']);
+
+    Route::get('/web/budget-active-bills', [BudgetActiveBillController::class, 'index']);
+    Route::put('/web/budget-active-bills/{id}', [BudgetActiveBillController::class, 'update']);
+    Route::delete('/web/budget-active-bills/{id}', [BudgetActiveBillController::class, 'destroy']);
+    Route::post('/web/store/budget-active-bills', [BudgetActiveBillController::class, 'store']);
 
 });
