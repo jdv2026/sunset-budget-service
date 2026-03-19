@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateBudgetActiveCategoryRequest;
 use App\Services\BudgetActiveCategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BudgetActiveCategoryController extends BaseController
 {
@@ -42,6 +43,30 @@ class BudgetActiveCategoryController extends BaseController
         }
 
         return $this->success($category, 'Category updated successfully');
+    }
+
+    public function forBills(Request $request): JsonResponse
+    {
+        $userId     = $request->attributes->get('jwt_payload')->sub;
+        $categories = $this->service->fetchByType($userId, 'expense');
+
+        return $this->success($categories);
+    }
+
+    public function forGoals(Request $request): JsonResponse
+    {
+        $userId     = $request->attributes->get('jwt_payload')->sub;
+        $categories = $this->service->fetchByType($userId, 'goals');
+
+        return $this->success($categories);
+    }
+
+    public function forWallets(Request $request): JsonResponse
+    {
+        $userId     = $request->attributes->get('jwt_payload')->sub;
+        $categories = $this->service->fetchByType($userId, 'income');
+
+        return $this->success($categories);
     }
 
     public function store(StoreBudgetActiveCategoryRequest $request): JsonResponse

@@ -8,7 +8,7 @@ class BudgetActiveGoalService
 {
     public function fetchAll(string $userId): \Illuminate\Database\Eloquent\Collection
     {
-        return BudgetActiveGoal::where('user_id', $userId)->orderBy('name')->get();
+        return BudgetActiveGoal::where('user_id', $userId)->orderBy('created_at')->get();
     }
 
     public function delete(string $userId, int $id): bool
@@ -28,7 +28,7 @@ class BudgetActiveGoalService
             'category_id' => $data['category_id'],
             'name'        => $data['name'],
             'description' => $data['description'] ?? null,
-            'target'      => $data['target'],
+            'amount'      => $data['amount'],
             'deadline'    => $data['deadline'] ?? null,
         ]);
 
@@ -42,7 +42,7 @@ class BudgetActiveGoalService
             'category_id' => $data['category_id'],
             'name'        => $data['name'],
             'description' => $data['description'] ?? null,
-            'target'      => $data['target'],
+            'amount'      => $data['amount'],
             'saved'       => 0,
             'deadline'    => $data['deadline'] ?? null,
         ]);

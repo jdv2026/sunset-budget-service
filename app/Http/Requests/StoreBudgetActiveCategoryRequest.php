@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreBudgetActiveCategoryRequest extends FormRequest
 {
@@ -14,9 +15,10 @@ class StoreBudgetActiveCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'   => ['required', 'string', 'min:3', 'max:20', 'unique:budget_active_categories,name'],
-            'icon'   => ['required', 'string', 'max:20'],
-            'color'  => ['required', 'string', 'max:20'],
+            'name'        => ['required', 'string', 'min:3', 'max:20', 'unique:budget_active_categories,name'],
+            'icon'        => ['required', 'string', 'max:20'],
+            'color'       => ['required', 'string', 'max:20'],
+            'type'        => ['required', Rule::in(['income', 'expense', 'goals'])],
             'description' => ['nullable', 'string', 'max:500'],
         ];
     }

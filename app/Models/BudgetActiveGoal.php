@@ -14,7 +14,7 @@ class BudgetActiveGoal extends Model
         'category_id',
         'name',
         'description',
-        'target',
+        'amount',
         'saved',
         'deadline',
     ];

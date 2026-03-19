@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('name', 20)->unique();
             $table->string('icon', 20);
             $table->string('color', 20);
+            $table->enum('type', ['income', 'expense', 'goals']);
             $table->string('description', 500)->nullable();
             $table->timestamps();
         });

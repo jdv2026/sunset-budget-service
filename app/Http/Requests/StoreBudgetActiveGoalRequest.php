@@ -17,10 +17,10 @@ class StoreBudgetActiveGoalRequest extends FormRequest
         $userId = $this->attributes->get('jwt_payload')->sub;
 
         return [
-            'category_id' => ['required', 'integer', 'exists:budget_active_categories,id'],
+            'category_id' => ['required', 'integer', Rule::exists('budget_active_categories', 'id')->where('type', 'goals')],
             'name'        => ['required', 'string', 'min:3', 'max:20', Rule::unique('budget_active_goals', 'name')->where('user_id', $userId)],
             'description' => ['nullable', 'string', 'max:500'],
-            'target'      => ['required', 'numeric', 'min:0'],
+            'amount'      => ['required', 'numeric', 'min:0'],
             'deadline'    => ['nullable', 'date'],
         ];
     }

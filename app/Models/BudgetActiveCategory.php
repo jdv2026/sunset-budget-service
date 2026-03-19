@@ -14,6 +14,7 @@ class BudgetActiveCategory extends Model
         'name',
         'icon',
         'color',
+        'type',
         'description',
     ];
 

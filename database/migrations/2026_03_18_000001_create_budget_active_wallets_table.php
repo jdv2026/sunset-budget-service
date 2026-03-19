@@ -8,22 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('budget_active_goals', function (Blueprint $table) {
+        Schema::create('budget_active_wallets', function (Blueprint $table) {
             $table->id();
             $table->string('user_id');
             $table->string('name', 20);
             $table->string('description', 500)->nullable();
             $table->decimal('amount', 15, 2)->default(0);
-            $table->decimal('saved', 15, 2)->default(0);
-            $table->date('deadline')->nullable();
-            $table->timestamps();
-            $table->foreignId('category_id')->constrained('budget_active_categories')->cascadeOnDelete();
             $table->unique(['user_id', 'name']);
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('budget_active_goals');
+        Schema::dropIfExists('budget_active_wallets');
     }
 };

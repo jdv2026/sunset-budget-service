@@ -20,6 +20,7 @@ class UpdateBudgetActiveCategoryRequest extends FormRequest
             'name'        => ['required', 'string', 'min:3', 'max:20', Rule::unique('budget_active_categories', 'name')->ignore($id)],
             'icon'        => ['required', 'string', 'max:20'],
             'color'       => ['required', 'string', 'max:20'],
+            'type'        => ['required', Rule::in(['income', 'expense', 'goals'])],
             'description' => ['nullable', 'string', 'max:500'],
         ];
     }

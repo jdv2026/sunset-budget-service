@@ -15,9 +15,11 @@ class BudgetActiveBill extends Model
         'name',
         'description',
         'amount',
+        'paid',
         'due_date',
         'frequency',
         'status',
+        'is_archive',
     ];
 
     public function category(): BelongsTo
