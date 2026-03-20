@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateBudgetActiveWalletRequest;
 use App\Services\BudgetActiveWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BudgetActiveWalletController extends BaseController
 {
@@ -20,7 +21,7 @@ class BudgetActiveWalletController extends BaseController
         return $this->success($wallets);
     }
 
-    public function storeIncome(StoreBudgetActiveWalletRequest $request): JsonResponse
+    public function store(StoreBudgetActiveWalletRequest $request): JsonResponse
     {
         $userId = $request->attributes->get('jwt_payload')->sub;
         $wallet = $this->service->store($userId, $request->validated());

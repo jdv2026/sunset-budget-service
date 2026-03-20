@@ -9,6 +9,7 @@ use App\Http\Controllers\BudgetIconCategoryController;
 use App\Http\Controllers\BudgetActiveBillController;
 use App\Http\Controllers\BudgetActiveWalletController;
 use App\Http\Controllers\BudgetActiveTransactionController;
+use App\Http\Controllers\BudgetActiveReportController;
 use App\Http\Controllers\BudgetDashboardController;
 
 Route::get('/', function () {
@@ -60,6 +61,8 @@ Route::middleware([JwtAuthenticate::class])->group(function () {
     Route::post('/web/store/income/budget-active-transactions', [BudgetActiveTransactionController::class, 'storeIncome']);
     Route::post('/web/store/pay-bills/budget-active-transactions', [BudgetActiveTransactionController::class, 'payBills']);
     Route::post('/web/store/transfer-funds/budget-active-transactions', [BudgetActiveTransactionController::class, 'transferFunds']);
+
+    Route::get('/web/budget-active-report', [BudgetActiveReportController::class, 'index']);
 
     Route::get('/web/budget-dashboard', [BudgetDashboardController::class, 'index']);
 

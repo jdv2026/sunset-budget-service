@@ -27,6 +27,7 @@ class BudgetActiveWalletService
         $wallet->update([
             'name'        => $data['name'],
             'description' => $data['description'] ?? null,
+            'category_id' => $data['category_id'] ?? null,
         ]);
 
         return $wallet;
@@ -38,6 +39,8 @@ class BudgetActiveWalletService
             'user_id'     => $userId,
             'name'        => $data['name'],
             'description' => $data['description'] ?? null,
+            'category_id' => $data['category_id'],
         ]);
     }
+	
 }
