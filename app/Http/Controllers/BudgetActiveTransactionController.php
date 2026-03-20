@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateBudgetActiveTransactionRequest;
 use App\Services\BudgetActiveTransactionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
 class BudgetActiveTransactionController extends BaseController
 {
     public function __construct(private BudgetActiveTransactionService $service) {}
@@ -21,6 +20,14 @@ class BudgetActiveTransactionController extends BaseController
         $transactions = $this->service->fetchAll($userId, $month, $year, $perPage);
 
         return $this->success($transactions);
+    }
+
+    public function fetchPayTransferOptions(Request $request): JsonResponse
+    {
+        $userId  = $request->attributes->get('jwt_payload')->sub;
+        $options = $this->service->fetchPayTransferOptions($userId);
+
+        return $this->success($options);
     }
 
     public function storeIncome(StoreBudgetActiveIncomeRequest $request): JsonResponse

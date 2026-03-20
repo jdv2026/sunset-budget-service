@@ -16,9 +16,12 @@ return new class extends Migration
             $table->decimal('amount', 15, 2)->default(0);
             $table->decimal('saved', 15, 2)->default(0);
             $table->date('deadline')->nullable();
-            $table->timestamps();
-            $table->foreignId('category_id')->constrained('budget_active_categories')->cascadeOnDelete();
+            $table->string('category_name', 20);
+            $table->string('category_icon', 20);
+            $table->string('category_color', 20);
+            $table->enum('category_type', ['income', 'expense', 'goals']);
             $table->unique(['user_id', 'name']);
+            $table->timestamps();
         });
     }
 

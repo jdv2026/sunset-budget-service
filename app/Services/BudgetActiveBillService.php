@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BudgetActiveCategory;
 use App\Models\BudgetActiveBill;
 use Carbon\Carbon;
 
@@ -26,13 +27,18 @@ class BudgetActiveBillService
             return null;
         }
 
+        $category = BudgetActiveCategory::find($data['category_id']);
+
         $bill->update([
-            'category_id' => $data['category_id'],
-            'name'        => $data['name'],
-            'description' => $data['description'] ?? null,
-            'amount'      => $data['amount'],
-            'due_date'    => $data['due_date'],
-            'frequency'   => $data['frequency'],
+            'name'           => $data['name'],
+            'description'    => $data['description'] ?? null,
+            'category_name'  => $category->name,
+            'category_icon'  => $category->icon,
+            'category_color' => $category->color,
+            'category_type'  => $category->type,
+            'amount'         => $data['amount'],
+            'due_date'       => $data['due_date'],
+            'frequency'      => $data['frequency'],
         ]);
 
         return $bill;
@@ -40,15 +46,20 @@ class BudgetActiveBillService
 
     public function store(string $userId, array $data): BudgetActiveBill
     {
+        $category = BudgetActiveCategory::find($data['category_id']);
+
         return BudgetActiveBill::create([
-            'user_id'     => $userId,
-            'category_id' => $data['category_id'],
-            'name'        => $data['name'],
-            'description' => $data['description'] ?? null,
-            'amount'      => $data['amount'],
-            'due_date'    => $data['due_date'],
-            'frequency'   => $data['frequency'],
-            'status'      => $this->resolveStatus($data['due_date']),
+            'user_id'        => $userId,
+            'name'           => $data['name'],
+            'description'    => $data['description'] ?? null,
+            'category_name'  => $category->name,
+            'category_icon'  => $category->icon,
+            'category_color' => $category->color,
+            'category_type'  => $category->type,
+            'amount'         => $data['amount'],
+            'due_date'       => $data['due_date'],
+            'frequency'      => $data['frequency'],
+            'status'         => $this->resolveStatus($data['due_date']),
         ]);
     }
 

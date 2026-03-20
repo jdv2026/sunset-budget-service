@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BudgetActiveTransaction extends Model
 {
@@ -14,26 +13,32 @@ class BudgetActiveTransaction extends Model
         'type',
         'description',
         'date',
-        'wallet_id',
-        'goal_id',
-        'bill_id',
-        'wallet',
-        'goal',
-        'bill',
+        'wallet_name',
+        'wallet_description',
+        'wallet_amount',
+        'wallet_category_name',
+        'wallet_category_icon',
+        'wallet_category_color',
+        'wallet_category_type',
+        'goal_name',
+        'goal_description',
+        'goal_amount',
+        'goal_saved',
+        'goal_deadline',
+        'goal_category_name',
+        'goal_category_icon',
+        'goal_category_color',
+        'goal_category_type',
+        'bill_name',
+        'bill_description',
+        'bill_paid',
+        'bill_amount',
+        'bill_due_date',
+        'bill_frequency',
+        'bill_status',
+        'bill_category_name',
+        'bill_category_icon',
+        'bill_category_color',
+        'bill_category_type',
     ];
-
-    public function wallet(): BelongsTo
-    {
-        return $this->belongsTo(BudgetActiveWallet::class, 'wallet_id');
-    }
-
-    public function goal(): BelongsTo
-    {
-        return $this->belongsTo(BudgetActiveGoal::class, 'goal_id');
-    }
-
-    public function bill(): BelongsTo
-    {
-        return $this->belongsTo(BudgetActiveBill::class, 'bill_id');
-    }
 }

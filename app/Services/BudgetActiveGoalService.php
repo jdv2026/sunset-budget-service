@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BudgetActiveCategory;
 use App\Models\BudgetActiveGoal;
 
 class BudgetActiveGoalService
@@ -24,12 +25,17 @@ class BudgetActiveGoalService
             return null;
         }
 
+        $category = BudgetActiveCategory::find($data['category_id']);
+
         $goal->update([
-            'category_id' => $data['category_id'],
-            'name'        => $data['name'],
-            'description' => $data['description'] ?? null,
-            'amount'      => $data['amount'],
-            'deadline'    => $data['deadline'] ?? null,
+            'name'           => $data['name'],
+            'description'    => $data['description'] ?? null,
+            'category_name'  => $category->name,
+            'category_icon'  => $category->icon,
+            'category_color' => $category->color,
+            'category_type'  => $category->type,
+            'amount'         => $data['amount'],
+            'deadline'       => $data['deadline'] ?? null,
         ]);
 
         return $goal;
@@ -37,14 +43,19 @@ class BudgetActiveGoalService
 
     public function store(string $userId, array $data): BudgetActiveGoal
     {
+        $category = BudgetActiveCategory::find($data['category_id']);
+
         return BudgetActiveGoal::create([
-            'user_id'     => $userId,
-            'category_id' => $data['category_id'],
-            'name'        => $data['name'],
-            'description' => $data['description'] ?? null,
-            'amount'      => $data['amount'],
-            'saved'       => 0,
-            'deadline'    => $data['deadline'] ?? null,
+            'user_id'        => $userId,
+            'name'           => $data['name'],
+            'description'    => $data['description'] ?? null,
+            'category_name'  => $category->name,
+            'category_icon'  => $category->icon,
+            'category_color' => $category->color,
+            'category_type'  => $category->type,
+            'amount'         => $data['amount'],
+            'saved'          => 0,
+            'deadline'       => $data['deadline'] ?? null,
         ]);
     }
 }

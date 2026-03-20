@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BudgetActiveBill extends Model
 {
@@ -11,19 +10,16 @@ class BudgetActiveBill extends Model
 
     protected $fillable = [
         'user_id',
-        'category_id',
         'name',
         'description',
+        'category_name',
+        'category_icon',
+        'category_color',
+        'category_type',
         'amount',
         'paid',
         'due_date',
         'frequency',
         'status',
-        'is_archive',
     ];
-
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(BudgetActiveCategory::class, 'category_id');
-    }
 }

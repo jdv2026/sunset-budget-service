@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateBudgetActiveWalletRequest;
 use App\Services\BudgetActiveWalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class BudgetActiveWalletController extends BaseController
 {
@@ -43,8 +42,13 @@ class BudgetActiveWalletController extends BaseController
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $userId  = $request->attributes->get('jwt_payload')->sub;
-        $deleted = $this->service->delete($userId, $id);
+        $userId = $request->attributes->get('jwt_payload')->sub;
+
+        try {
+            $deleted = $this->service->delete($userId, $id);
+        } catch (\InvalidArgumentException $e) {
+            return $this->fail($e->getMessage(), 422);
+        }
 
         if (!$deleted) {
             return $this->fail('Wallet not found', 404);

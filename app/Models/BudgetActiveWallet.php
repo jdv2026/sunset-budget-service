@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BudgetActiveWallet extends Model
 {
@@ -13,12 +12,10 @@ class BudgetActiveWallet extends Model
         'user_id',
         'name',
         'description',
+        'category_name',
+        'category_icon',
+        'category_color',
+        'category_type',
         'amount',
-        'category_id',
     ];
-
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(BudgetActiveCategory::class, 'category_id');
-    }
 }

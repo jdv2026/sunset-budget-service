@@ -18,9 +18,12 @@ return new class extends Migration
             $table->date('due_date');
             $table->enum('frequency', ['monthly', 'weekly', 'yearly']);
             $table->enum('status', ['upcoming', 'paid', 'overdue'])->default('upcoming');
-            $table->timestamps();
-            $table->foreignId('category_id')->constrained('budget_active_categories')->cascadeOnDelete();
+            $table->string('category_name', 20);
+            $table->string('category_icon', 20);
+            $table->string('category_color', 20);
+            $table->enum('category_type', ['income', 'expense', 'goals']);
             $table->unique(['user_id', 'name']);
+            $table->timestamps();
         });
     }
 

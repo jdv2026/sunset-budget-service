@@ -17,10 +17,10 @@ class StoreBudgetActiveWalletRequest extends FormRequest
         $userId = $this->attributes->get('jwt_payload')->sub;
 
         return [
-            'name'        => ['required', 'string', 'min:3', 'max:20', Rule::unique('budget_active_wallets', 'name')->where('user_id', $userId)],
-            'description' => ['nullable', 'string', 'max:500'],
-            'amount'      => ['nullable', 'numeric', 'min:0'],
-            'category_id' => ['required', 'integer', 'exists:budget_active_categories,id'],
+            'name'          => ['required', 'string', 'min:3', 'max:20', Rule::unique('budget_active_wallets', 'name')->where('user_id', $userId)],
+            'description'   => ['nullable', 'string', 'max:500'],
+            'category_id'    => ['required', 'integer', 'exists:budget_active_categories,id'],
+            'amount'        => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }
