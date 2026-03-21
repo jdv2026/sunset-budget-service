@@ -26,6 +26,12 @@ jobs:
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%s)
           CURRENT=$(cat VERSION 2>/dev/null || echo "1.0.0")
+
+          if echo "$COMMIT_MSG" | grep -q '\[skip ci\]'; then
+            echo "new_version=$CURRENT" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
           if echo "$COMMIT_MSG" | grep -qi '\[major\]'; then
@@ -46,6 +52,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add VERSION
           git diff --staged --quiet || git commit -m "chore: bump version to $(cat VERSION) [skip ci]"
+          git pull --rebase origin main
           git push
 
   test:
