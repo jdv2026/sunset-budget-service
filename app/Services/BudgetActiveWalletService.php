@@ -14,13 +14,13 @@ class BudgetActiveWalletService
 
     public function delete(string $userId, int $id): bool
     {
-        $wallet = BudgetActiveWallet::where('id', $id)->where('user_id', $userId)->first();
+        $wallet = $this->findWallet($userId, $id);
 
         if (!$wallet) {
             return false;
         }
 
-        if ($wallet->amount != 0) {
+        if ($wallet->amount !== 0) {
             throw new \InvalidArgumentException('Wallet balance must be 0 before deleting.');
         }
 
@@ -31,7 +31,7 @@ class BudgetActiveWalletService
 
     public function update(string $userId, int $id, array $data): ?BudgetActiveWallet
     {
-        $wallet = BudgetActiveWallet::where('id', $id)->where('user_id', $userId)->first();
+        $wallet = $this->findWallet($userId, $id);
 
         if (!$wallet) {
             return null;
@@ -69,5 +69,9 @@ class BudgetActiveWalletService
             'category_type'  => $category->type,
         ]);
     }
-	
+
+    private function findWallet(string $userId, int $id): ?BudgetActiveWallet
+    {
+        return BudgetActiveWallet::where('id', $id)->where('user_id', $userId)->first();
+    }
 }

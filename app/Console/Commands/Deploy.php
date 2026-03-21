@@ -20,7 +20,6 @@ class Deploy extends Command
         $this->ensureStorageDirectories();
 
         $steps = [
-            'Installing Sunset'        => ['php', 'artisan', 'install:sunset'],
             'Running migrations'       => ['php', 'artisan', 'migrate', '--force'],
             'Caching configuration'   => ['php', 'artisan', 'config:cache'],
             'Caching routes'          => ['php', 'artisan', 'route:cache'],
@@ -96,7 +95,7 @@ class Deploy extends Command
         $this->newLine();
     }
 
-    private function runStep(string $label, array $command): int
+    protected function runStep(string $label, array $command): int
     {
         $this->info("→ {$label}...");
 

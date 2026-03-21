@@ -12,6 +12,12 @@ use App\Http\Controllers\BudgetActiveTransactionController;
 use App\Http\Controllers\BudgetActiveOverviewController;
 use App\Http\Controllers\BudgetActiveReportController;
 
+Route::get('/version', function () {
+    return response()->json([
+        'version' => config('app.version'),
+    ]);
+});
+
 Route::get('/', function () {
     $title = '403 - Forbidden';
     $description = 'You do not have permission to access this resource.';

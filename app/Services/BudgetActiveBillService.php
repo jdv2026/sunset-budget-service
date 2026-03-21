@@ -16,12 +16,24 @@ class BudgetActiveBillService
 
     public function delete(string $userId, int $id): bool
     {
-        return BudgetActiveBill::where('id', $id)->where('user_id', $userId)->delete() > 0;
+        $bill = $this->findBill($userId, $id);
+
+        if (!$bill) {
+            return false;
+        }
+
+        if ($bill->paid !== 0) {
+            throw new \InvalidArgumentException('Bill has paid amount and cannot be deleted.');
+        }
+
+        $bill->delete();
+
+        return true;
     }
 
     public function update(string $userId, int $id, array $data): ?BudgetActiveBill
     {
-        $bill = BudgetActiveBill::where('id', $id)->where('user_id', $userId)->first();
+        $bill = $this->findBill($userId, $id);
 
         if (!$bill) {
             return null;
@@ -63,7 +75,12 @@ class BudgetActiveBillService
         ]);
     }
 
-	private function resolveStatus(string $dueDate): string
+    private function findBill(string $userId, int $id): ?BudgetActiveBill
+    {
+        return BudgetActiveBill::where('id', $id)->where('user_id', $userId)->first();
+    }
+
+    private function resolveStatus(string $dueDate): string
     {
         $due = Carbon::parse($dueDate)->startOfDay();
 

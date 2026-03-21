@@ -14,12 +14,24 @@ class BudgetActiveGoalService
 
     public function delete(string $userId, int $id): bool
     {
-        return BudgetActiveGoal::where('id', $id)->where('user_id', $userId)->delete() > 0;
+        $goal = $this->findGoal($userId, $id);
+
+        if (!$goal) {
+            return false;
+        }
+
+        if ($goal->saved !== 0) {
+            throw new \InvalidArgumentException('Goal has saved funds and cannot be deleted.');
+        }
+
+        $goal->delete();
+
+        return true;
     }
 
     public function update(string $userId, int $id, array $data): ?BudgetActiveGoal
     {
-        $goal = BudgetActiveGoal::where('id', $id)->where('user_id', $userId)->first();
+        $goal = $this->findGoal($userId, $id);
 
         if (!$goal) {
             return null;
@@ -57,5 +69,10 @@ class BudgetActiveGoalService
             'saved'          => 0,
             'deadline'       => $data['deadline'] ?? null,
         ]);
+    }
+
+    private function findGoal(string $userId, int $id): ?BudgetActiveGoal
+    {
+        return BudgetActiveGoal::where('id', $id)->where('user_id', $userId)->first();
     }
 }
