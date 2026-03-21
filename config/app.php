@@ -123,7 +123,11 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'version' => env('APP_VERSION', '1.0.0'),
+
 	'AES_KEY' => env('AES_KEY', null),
 	'AES_IV' => env('AES_IV', null),
 
+	'AUTH_JWKS_URL' => env('AUTH_JWKS_URL', null),
+	'AUTH_REFRESH_URL' => env('AUTH_REFRESH_URL', null),
 ];

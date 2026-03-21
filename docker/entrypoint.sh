@@ -12,7 +12,6 @@ fi
 
 if [ ! -f storage/jwt/private_rsa.pem ]; then
     echo "First-time setup detected..."
-    php artisan install:sunset
     php artisan deploy
     echo "Setup complete."
 fi
