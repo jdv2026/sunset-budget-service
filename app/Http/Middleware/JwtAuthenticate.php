@@ -32,7 +32,7 @@ class JwtAuthenticate
 			Log::debug($e);
             return $this->handleExpiredToken($request, $next);
         }
-		catch (Exception $e) {
+		catch (\Throwable $e) {
 			Log::debug($e);
             return $this->jsonError('Token invalid');
         }

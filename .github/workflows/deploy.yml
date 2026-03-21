@@ -155,6 +155,7 @@ jobs:
               'CACHE_STORE=database' \
               'APP_PORT=${{ secrets.APP_PORT }}' \
               'APP_VERSION=${{ needs.version.outputs.new_version }}' \
+              'AUTH_JWKS_URL=${{ secrets.AUTH_JWKS_URL }}' \
               'DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/sunset-budget-service-api:latest' \
               > "$ENV_FILE"
 
