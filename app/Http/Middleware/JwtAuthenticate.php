@@ -43,8 +43,9 @@ class JwtAuthenticate
         Log::info('Token expired, attempting refresh');
         try {
             $newToken = $this->jwksService->refreshToken($request->bearerToken());
-
+			Log::debug("New token: " . $newToken);
             $request->headers->set('Authorization', 'Bearer ' . $newToken);
+            $request->attributes->set('jwt_payload', $this->jwksService->verifyToken($newToken));
             $response = $next($request);
 
             $data = $response->getOriginalContent() ?? [];
