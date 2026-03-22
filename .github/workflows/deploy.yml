@@ -164,7 +164,7 @@ jobs:
               'APP_VERSION=${{ needs.version.outputs.new_version }}' \
               'AUTH_JWKS_URL=${{ secrets.AUTH_JWKS_URL }}' \
               'DOCKER_IMAGE=${{ secrets.DOCKER_USERNAME }}/sunset-budget-service-api:latest' \
-              'AUTH_REFRESH_URL=${{ secrets.AUTH_SERVICE_URL }}'
+              'AUTH_REFRESH_URL=${{ secrets.AUTH_REFRESH_URL }}'
               > "$ENV_FILE"
 
       - name: SSH and deploy
