@@ -29,7 +29,7 @@ class JwksService
             throw new Exception('Failed to refresh token from auth service');
         }
 
-        return $response->json('access_token');
+		return $response->json('access_token');
     }
 
     public function verifyToken(string $token): object
